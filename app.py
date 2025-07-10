@@ -1,49 +1,46 @@
-# app.py
 import streamlit as st
-import os
-import requests
-from dotenv import load_dotenv
+from genAI import send_pdf_answer
+import time
 
-load_dotenv()
-API_KEY = os.getenv("OPENAI_API_KEY")
+st.set_page_config(page_title="PDF Chatbot", layout="centered")
+st.title("PDF Chatbot")
 
-headers = {
-    "Authorization": f"Bearer {API_KEY}",
-    "Content-Type": "application/json"
-}
+# Initialize chat history
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 
-ROLE_PROMPTS = {
-    "math": "You are a math assistant...",
-    "cs": "You are a CS tutor...",
-    "career": "You are a career coach..."
-}
+# ✅ 1. Display past messages (only previous ones)
+for message in st.session_state.chat_history:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
-st.title("🧠 Multi-Role Chatbot")
+# ✅ 2. Input and real-time response
+user_input = st.chat_input("Ask a question about your PDFs...")
 
-role = st.selectbox("Choose a role:", list(ROLE_PROMPTS.keys()))
-user_input = st.text_input("Enter your message:")
-send_btn = st.button("Send")
 
-if send_btn and user_input:
-    system_prompt = ROLE_PROMPTS[role]
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": user_input}
-    ]
 
-    json_data = {
-        "model": "gpt-4o-mini",
-        "messages": messages
-    }
+if user_input:
+    # Show user message immediately
+    with st.chat_message("user"):
+        st.markdown(user_input)
 
-    response = requests.post(
-        "https://api.openai.com/v1/chat/completions",
-        headers=headers,
-        json=json_data
-    )
+    # Stream assistant response
+    with st.chat_message("assistant"):
+        response_placeholder = st.empty()
+        response_placeholder.markdown("🤖 Thinking...")
 
-    if response.status_code == 200:
-        reply = response.json()["choices"][0]["message"]["content"]
-        st.markdown(f"**🤖 Assistant:** {reply}")
-    else:
-        st.error("Something went wrong.")
+        try:
+            full_response = send_pdf_answer(user_input)
+            streamed_text = ""
+
+            for chunk in full_response:
+                streamed_text += chunk
+                response_placeholder.markdown(streamed_text)
+                time.sleep(0.015)
+
+            # ✅ Now save to history after rendering
+            st.session_state.chat_history.append({"role": "user", "content": user_input})
+            st.session_state.chat_history.append({"role": "assistant", "content": full_response})
+
+        except Exception as e:
+            response_placeholder.markdown(f"⚠️ Error: {e}")
