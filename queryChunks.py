@@ -1,4 +1,4 @@
-# query_chunks.py
+# queryChunks.py
 
 import psycopg2
 import ollama
@@ -12,26 +12,25 @@ def connect_db():
         host="localhost"
     )
 
-def get_top_k_chunks(query, k=4, model_name="mxbai-embed-large"):
+def get_top_k_chunks(query, k=3, model_name="mxbai-embed-large"):
     conn = connect_db()
     cur = conn.cursor()
 
-    # 1. Embed the user query
+    # 1. Embed query
     response = ollama.embeddings(model=model_name, prompt=query)
     query_embedding = response["embedding"]
 
     # 2. Convert to Postgres array format
     embedding_str = "[" + ",".join([str(x) for x in query_embedding]) + "]"
 
-    # 3. Search for similar chunks
+    # 3. Retrieve top-k with similarity score
     cur.execute(f"""
-        SELECT content, metadata
+        SELECT content, metadata, embedding <-> %s AS score
         FROM document_chunks
-        ORDER BY embedding <-> %s
+        ORDER BY score ASC
         LIMIT %s
     """, (embedding_str, k))
 
     results = cur.fetchall()
     conn.close()
-
-    return results
+    return results  # (content, metadata, score)
