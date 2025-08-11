@@ -1,0 +1,26 @@
+- Using OpenAI api for chat
+
+Week 1: Setup Done
+
+Week 2:
+
+    1. In order to run CLI for this mocel, use: pyhton run OpenAI.py
+
+    2. Summary of findings:
+        - gpt-4o-mini
+            * When it comes to solving match problems, the model is able to solve and explain the problems
+                Prompt asked: Solve for x: 3x + 5 = 14
+            * if I ask any other non-math based prompt, the model is able to accurately and prolitely decline answering the question
+        - gpt-4o
+            * Math problems were explained more in depth. Though it was a simple problem and was similar to the mini model, there was a little more verbal explination along with the mathematical
+            * was able to prolitely decline solving a non-math related problem
+
+Week 3:
+    1. Prompt engineering roles
+        - Prompt engineers typically help bridge the gap between users and LLMs
+        - This measn that they AI needs to adapt to each user depending on the demands of that user
+            * For exmaple, if the user is a student asking for clarafication of topics, it is the AIs job to prvide that information, the same fores for if the user is a pilot, CEO, etc...
+            * The AI also needs to made sure that it's replying in that specific context
+
+    2. Adding a chat history for the user
+        - they way to do this would be to create an empty list and then keep appending to it as the prompt and answrs come
